@@ -1,0 +1,7 @@
+package com.example.dataclass;
+
+public class Weather {
+	
+	String cityname, pressure, humidity, temp_min, temp_max;
+
+}

@@ -1,0 +1,7 @@
+INDEX VERSION 1.126+D:\Workspace\LeftShiftTask\.metadata\.plugins\org.eclipse.jdt.core
+2906322689.index
+2316277668.index
+1532364646.index
+1284074322.index
+1609247467.index
+4192405912.index

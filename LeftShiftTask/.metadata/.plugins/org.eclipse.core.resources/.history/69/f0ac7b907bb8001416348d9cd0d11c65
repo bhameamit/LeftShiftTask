@@ -1,0 +1,5 @@
+package com.example.dataclass;
+
+public class WeatherParameters {
+	String pressure, humidity, temp_min, temp_max;
+}

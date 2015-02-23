@@ -1,0 +1,221 @@
+package com.example.leftshifttak;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.TimeZone;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.TextView;
+
+import com.example.adapter.WeatherAdapter;
+import com.example.dataclass.Weather;
+import com.example.dataclass.WeatherParameters;
+
+public class ListCitiesActivity extends Activity {
+	Intent intent;
+	ArrayList<String> response_list;
+	ArrayList<Weather> weathers;
+	LinearLayout linear_city;
+	private final static String TAG = "ListCitiesSctivity";
+	
+	ArrayList<String> city_header;
+	private HashMap<String, List<WeatherParameters>> weather_data;
+
+	
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_list_cities);
+
+		linear_city = (LinearLayout)findViewById(R.id.linear_city);
+		city_header = new ArrayList<String>();
+		weather_data = new HashMap<String, List<WeatherParameters>>();
+		
+		weathers = new ArrayList<Weather>();
+
+		intent = getIntent();
+		try {
+			if (intent != null) {
+				response_list = intent.getStringArrayListExtra("response_list");
+
+				for (int i = 0; i < response_list.size(); i++) {
+					String response = response_list.get(i);
+					//Weather weather = new Weather();
+
+					try {
+						JSONObject json_response = new JSONObject(response);
+
+						JSONObject city = json_response.getJSONObject("city");
+						String name = city.getString("name");
+						city_header.add(name);
+						//weather.setCityname(name);
+						JSONArray list_array = json_response
+								.getJSONArray("list");
+						
+						List<WeatherParameters> list_weatherParameters = new ArrayList<WeatherParameters>();
+						for (int j = 0; j < list_array.length(); j++) {
+
+							JSONObject weather_date = list_array
+									.getJSONObject(j);
+							
+							WeatherParameters weatherParameters = new WeatherParameters();
+
+							String get_date = weather_date.getString("dt");
+							String date = formatDate(Long.parseLong(get_date));
+							weatherParameters.setDate(date);
+							
+							
+
+							String pressure = weather_date
+									.getString("pressure");
+							String humidity = weather_date
+									.getString("humidity");
+
+							weatherParameters.setPressure(pressure);
+							weatherParameters.setHumidity(humidity);
+
+							JSONObject temp = weather_date
+									.getJSONObject("temp");
+							String temp_min = temp.getString("min");
+							String temp_max = temp.getString("max");
+
+							weatherParameters.setTemp_min(temp_min);
+							weatherParameters.setTemp_max(temp_max);
+
+							/*
+							 * Log.i("MAinActivty", "pressue" +pressure);
+							 * Log.i("MAinActivty", "temp_min" +temp_min);
+							 */
+							
+							
+
+							list_weatherParameters.add(weatherParameters);
+						}
+						
+						//weather.setWeatherParameters(list_weatherParameters);
+						weather_data.put(name, list_weatherParameters);
+					} catch (JSONException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+
+			}
+		} catch (NullPointerException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		Log.i(TAG, "weather data " + weather_data.toString());
+		Log.i(TAG, "city_header " + city_header.toString());
+		
+		View row_city=null;
+		LayoutInflater inflator=(LayoutInflater)this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		row_city =inflator.inflate(R.layout.list_group, null, false);
+		
+		for(int i=0; i< city_header.size(); i++)
+		{
+			//linear_city.removeAllViews();
+			
+			TextView city_name = (TextView)row_city.findViewById(R.id.city_name);
+			city_name.setText(city_header.get(i));
+			
+			LinearLayout city_parameters = (LinearLayout)row_city.findViewById(R.id.city_parameters);
+			View row_parameters=null;
+			LayoutInflater inflator_parameters=(LayoutInflater)this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+			row_parameters =inflator_parameters.inflate(R.layout.list_item, null, false);
+			
+			for(int j=0;j<weather_data.size(); j++)
+			{
+				//city_parameters.removeAllViews();
+				
+				TextView date = (TextView)row_parameters.findViewById(R.id.date);
+				date.setText(weather_data.get(city_header.get(i)).get(j).getDate());
+				
+				TextView pressure = (TextView)row_parameters.findViewById(R.id.pressure);
+				pressure.setText(weather_data.get(city_header.get(i)).get(j).getPressure());
+				
+				TextView humidty = (TextView)row_parameters.findViewById(R.id.humidty);
+				humidty.setText(weather_data.get(city_header.get(i)).get(j).getHumidity());
+				
+				TextView min_temp = (TextView)row_parameters.findViewById(R.id.min_temp);
+				min_temp.setText(weather_data.get(city_header.get(i)).get(j).getTemp_min());
+				
+				TextView max_temp = (TextView)row_parameters.findViewById(R.id.max_temp);
+				max_temp.setText(weather_data.get(city_header.get(i)).get(j).getTemp_max());
+				
+				
+				city_parameters.addView(row_parameters);
+			}
+			
+			linear_city.addView(row_city);
+		}
+
+		
+	}
+	
+	@Override
+	protected void onResume() {
+		// TODO Auto-generated method stub
+		//weathers.clear();
+		super.onResume();
+		
+	}
+
+	private String formatDate(long get_date) {
+		// TODO Auto-generated method stub
+		Calendar calendar = Calendar.getInstance();
+		TimeZone tz = TimeZone.getDefault();
+		calendar.setTimeInMillis(get_date * 1000);
+		calendar.add(Calendar.MILLISECOND,
+				tz.getOffset(calendar.getTimeInMillis()));
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+		Date currenTimeZone = (Date) calendar.getTime();
+		return sdf.format(currenTimeZone);
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// Inflate the menu; this adds items to the action bar if it is present.
+		getMenuInflater().inflate(R.menu.list_cities, menu);
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		// Handle action bar item clicks here. The action bar will
+		// automatically handle clicks on the Home/Up button, so long
+		// as you specify a parent activity in AndroidManifest.xml.
+		int id = item.getItemId();
+		if (id == R.id.action_settings) {
+			return true;
+		}
+		return super.onOptionsItemSelected(item);
+	}
+	
+	@Override
+	public void onBackPressed() {
+		// TODO Auto-generated method stub
+		super.onBackPressed();
+		finish();
+	}
+}

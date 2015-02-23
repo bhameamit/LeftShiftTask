@@ -1,0 +1,175 @@
+package com.example.leftshifttak;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.os.Bundle;
+
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
+import android.widget.EditText;
+
+import com.example.net.NetworkConnection;
+import com.example.net.ProxyInterface;
+
+public class MainActivity extends Activity implements ProxyInterface {
+
+	public static final String URL = "http://api.openweathermap.org/data/2.5/forecast/daily?q=";
+
+	EditText city1;
+	Button send_city;
+	int max = 0;
+	private static final String TAG = "MainActivity";
+	int error_count=0;
+
+	ArrayList<String> response_list;
+
+	ProgressDialog progressDialog;
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_main);
+
+		city1 = (EditText) findViewById(R.id.city1);
+		send_city = (Button) findViewById(R.id.send_city);
+
+		showWeather();
+	}
+
+	private void showWeather() {
+		// TODO Auto-generated method stub
+		response_list = new ArrayList<String>();
+		send_city.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				error_count=0;
+				String get_city1 = city1.getText().toString();
+
+				if (get_city1.equals("")) {
+					showErrorDialog("Enter a Value First");
+				} else {
+					progressDialog = new ProgressDialog(MainActivity.this);
+					progressDialog
+							.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+					progressDialog.setIndeterminate(false);
+					progressDialog.setCancelable(false);
+					progressDialog.setMessage("Loading...");
+					progressDialog.show();
+
+					List<String> get_names = Arrays.asList(get_city1.split(","));
+
+					for (int i = 0; i < get_names.size(); i++) {
+						callGetWeatherApi(get_names.get(i).trim());
+					}
+					max = get_names.size();
+				}
+
+			}
+
+		});
+	}
+
+	protected synchronized void callGetWeatherApi(String get_city1) {
+		// TODO Auto-generated method stub
+		new NetworkConnection(URL + get_city1
+				+ "&mode=json&units=metric&cnt=14", this, this).execute();
+	}
+
+	private void showErrorDialog(String error) {
+		// TODO Auto-generated method stub
+		AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
+		alert.setTitle("Error!");
+		alert.setMessage(error);
+
+		alert.setNegativeButton("Ok", new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int whichButton) {
+				// Canceled.
+				dialog.cancel();
+				
+			}
+		});
+
+		alert.show();
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// Inflate the menu; this adds items to the action bar if it is present.
+		getMenuInflater().inflate(R.menu.main, menu);
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		// Handle action bar item clicks here. The action bar will
+		// automatically handle clicks on the Home/Up button, so long
+		// as you specify a parent activity in AndroidManifest.xml.
+		int id = item.getItemId();
+		if (id == R.id.action_settings) {
+			return true;
+		}
+		return super.onOptionsItemSelected(item);
+	}
+
+	@Override
+	public void responseFromService(String response, String url) {
+		// TODO Auto-generated method stub
+		//Log.i(TAG, "response" + response);
+
+		JSONObject json_response;
+		try {
+			json_response = new JSONObject(response);
+			String cod = json_response.getString("cod");
+			if (cod.equals("200")) {
+				response_list.add(response);
+
+				/*Log.i(TAG, "max" + max);
+				Log.i(TAG, "response_list size" + response_list.size());*/
+
+				if (response_list.size() >= max) {
+					progressDialog.dismiss();
+					Intent intent = new Intent(MainActivity.this,
+							ListCitiesActivity.class);
+					intent.putStringArrayListExtra("response_list",
+							response_list);
+					startActivity(intent);
+				}
+			}
+			else if(cod.equals("404"))
+			{
+				error_count++;
+				progressDialog.dismiss();
+				if(error_count==1)
+					showErrorDialog("Enter Proper City Name");
+			}
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			progressDialog.dismiss();
+		}
+
+	}
+
+	@Override
+	protected void onResume() {
+		// TODO Auto-generated method stub
+		super.onResume();
+		showWeather();
+
+	}
+}

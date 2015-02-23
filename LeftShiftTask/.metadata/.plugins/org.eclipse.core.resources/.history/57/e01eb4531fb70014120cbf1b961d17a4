@@ -1,0 +1,89 @@
+package com.example.adapter;
+
+import java.util.ArrayList;
+
+import com.example.dataclass.Weather;
+
+import android.app.ListActivity;
+import android.content.Context;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+public class WeatherAdapter extends BaseAdapter{
+	
+	Context ctx;
+    LayoutInflater lInflater;
+    ArrayList<Weather> weathers;   
+   
+    
+    public WeatherAdapter(Context context,ArrayList<Weather> weathers, String category) {
+        ctx = context;        
+        this.weathers= weathers; 
+        lInflater = (LayoutInflater) ctx
+                .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        this.category=category;
+        
+    }
+
+   
+	@Override
+    public int getCount() {
+        return name.size();
+    }
+
+    @Override
+    public Object getItem(int position) {
+        return position;
+    }
+
+    @Override
+    public long getItemId(int position) {
+        return position;
+    }
+
+    @Override
+    public View getView(int position, View convertView, ViewGroup parent) {
+        
+        if (convertView == null) {
+            convertView = (View) lInflater.inflate(R.layout.list_recipient, parent, false);            
+        }
+        
+        ImageView image=(ImageView)convertView.findViewById(R.id.image);
+        if(category.equals("people"))
+        {
+        	
+        	image.setImageResource(R.drawable.people);
+        }
+        else if(category.equals("places"))
+        {
+        	
+        	image.setImageResource(R.drawable.places);
+        }
+        else if(category.equals("events"))
+        {
+        	
+        	image.setImageResource(R.drawable.events);
+        }
+        else if(category.equals("others"))
+        {
+        	
+        	image.setImageResource(R.drawable.others);
+        }
+        TextView text=(TextView)convertView.findViewById(R.id.label);
+        text.setText(name.get(position));
+        return convertView;
+    }
+
+    
+    
+
+
+
+}
+
